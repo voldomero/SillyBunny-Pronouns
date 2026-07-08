@@ -217,16 +217,22 @@ export const settingKeys = Object.freeze({
     DIRECTIVE_ROLE: 'directiveRole',
     DIRECTIVE_TEMPLATE_PERSONA: 'directiveTemplatePersona',
     DIRECTIVE_TEMPLATE_CHARACTER: 'directiveTemplateCharacter',
+    DEBUG_LOGGING: 'debugLogging',
     CHARACTERS: 'characters',
 });
 
-/** Default injected directive for personas. `%LIST%` is replaced with the formatted pronoun sets. */
+/**
+ * Default injected directive for personas.
+ * `%LIST%` -> all sets ("she/her and they/them"); `%ACTIVE%` -> this turn's rotated set ("they/them").
+ * The per-turn `%ACTIVE%` command is the strong lever: it gives the model a concrete instruction
+ * for the current reply, which overrides a context otherwise saturated with one pronoun.
+ */
 export const DEFAULT_DIRECTIVE_PERSONA =
-    '[System note: {{user}} uses multiple sets of pronouns — %LIST%. When referring to {{user}}, alternate naturally between these sets throughout the conversation instead of defaulting to only one. Every listed set is equally correct.]';
+    '[Pronoun instruction: {{user}} uses multiple pronoun sets — %LIST%. In your next reply, refer to {{user}} using %ACTIVE% pronouns specifically. Across the roleplay, deliberately rotate through all of {{user}}\'s pronoun sets instead of defaulting to one — every set is equally correct and in-character.]';
 
-/** Default injected directive for characters. */
+/** Default injected directive for characters. Same placeholders as the persona template. */
 export const DEFAULT_DIRECTIVE_CHARACTER =
-    '[System note: {{char}} uses multiple sets of pronouns — %LIST%. When referring to {{char}}, alternate naturally between these sets throughout the conversation instead of defaulting to only one. Every listed set is equally correct.]';
+    '[Pronoun instruction: {{char}} uses multiple pronoun sets — %LIST%. In your next reply, refer to {{char}} using %ACTIVE% pronouns specifically. Across the roleplay, deliberately rotate through all of {{char}}\'s pronoun sets instead of defaulting to one — every set is equally correct and in-character.]';
 
 const defaultSettings = Object.freeze({
     [settingKeys.CUR_VERSION]: null,
@@ -234,10 +240,11 @@ const defaultSettings = Object.freeze({
     [settingKeys.ENABLE_WYVERN_COMPAT]: false,
     [settingKeys.ENABLE_JANITOR_COMPAT]: false,
     [settingKeys.DIRECTIVE_ENABLED]: true,
-    [settingKeys.DIRECTIVE_DEPTH]: 4,
+    [settingKeys.DIRECTIVE_DEPTH]: 2, // shallow = more recent = stronger pull on the next reply
     [settingKeys.DIRECTIVE_ROLE]: 0, // extension_prompt_roles.SYSTEM
     [settingKeys.DIRECTIVE_TEMPLATE_PERSONA]: DEFAULT_DIRECTIVE_PERSONA,
     [settingKeys.DIRECTIVE_TEMPLATE_CHARACTER]: DEFAULT_DIRECTIVE_CHARACTER,
+    [settingKeys.DEBUG_LOGGING]: false,
     [settingKeys.CHARACTERS]: {},
 });
 
@@ -265,7 +272,7 @@ export const pronounsSettings = {
     get directiveEnabled() { return Boolean(ensureSettings()[settingKeys.DIRECTIVE_ENABLED]); },
     get directiveDepth() {
         const n = Number(ensureSettings()[settingKeys.DIRECTIVE_DEPTH]);
-        return Number.isFinite(n) && n >= 0 ? Math.floor(n) : 4;
+        return Number.isFinite(n) && n >= 0 ? Math.floor(n) : 2;
     },
     get directiveRole() {
         const n = Number(ensureSettings()[settingKeys.DIRECTIVE_ROLE]);
@@ -279,6 +286,7 @@ export const pronounsSettings = {
         const t = ensureSettings()[settingKeys.DIRECTIVE_TEMPLATE_CHARACTER];
         return typeof t === 'string' && t.trim() ? t : DEFAULT_DIRECTIVE_CHARACTER;
     },
+    get debugLogging() { return Boolean(ensureSettings()[settingKeys.DEBUG_LOGGING]); },
 };
 
 /**
@@ -446,6 +454,28 @@ export function collectWordKeyMap(container) {
         }
     }
     return map;
+}
+
+/**
+ * Formats a single set as "subjective/objective" (e.g. "they/them").
+ * @param {PronounSet} set
+ * @returns {string}
+ */
+export function formatSet(set) {
+    return [set?.subjective, set?.objective].filter(Boolean).join('/');
+}
+
+/**
+ * Picks the set to feature in this turn's directive, rotating by `turn`.
+ * @param {PronounContainer} container
+ * @param {number} turn
+ * @returns {PronounSet|null}
+ */
+export function pickActiveSet(container, turn) {
+    const sets = container?.sets ?? [];
+    if (sets.length === 0) return null;
+    const idx = Math.abs(Math.trunc(Number(turn) || 0)) % sets.length;
+    return sets[idx];
 }
 
 /**

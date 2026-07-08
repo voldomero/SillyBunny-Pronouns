@@ -26,7 +26,7 @@ import {
     hasEntityContext,
     pronounsSettings,
 } from './pronouns.js';
-import { refreshDirectives } from './directive.js';
+import { refreshDirectives, getDirectiveDebugInfo } from './directive.js';
 import { refreshEditors } from './ui.js';
 
 const ENTITY_ENUMS = [
@@ -350,6 +350,30 @@ export function registerSlashCommands() {
                 if (useSh === null) return '';
                 const entity = resolveEntity(args.target);
                 return await openPronounReplacePopup(String(text ?? ''), { defaultUseShorthands: useSh ?? false, entity }) ?? '';
+            } catch (error) {
+                toastr.error(String(error?.message ?? error), 'Pronouns');
+                return '';
+            }
+        },
+    }));
+
+    // /pronouns-debug
+    SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+        name: 'pronouns-debug',
+        returns: 'A short summary; full detail is logged to the browser console.',
+        helpString: `
+            <div>Dumps the current pronoun state to the browser console: persona/character sets,
+            modes, directive overrides, and the exact directive text that will be injected.</div>
+            <div>Use this to confirm whether the directive is empty (no sets / disabled) or active.</div>`,
+        callback: () => {
+            try {
+                const info = getDirectiveDebugInfo();
+                console.info('[SillyBunny-Pronouns] /pronouns-debug', info);
+                const p = info.persona;
+                const c = info.character;
+                const summary = `Persona: ${p.sets.length} set(s), inject=${p.willInject}. Character: ${c.sets.length} set(s), inject=${c.willInject}. Global directive=${info.globalDirectiveEnabled}, depth=${info.depth}. (Full detail in console.)`;
+                toastr.info(summary, 'Pronouns debug', { timeOut: 12000, extendedTimeOut: 20000 });
+                return summary;
             } catch (error) {
                 toastr.error(String(error?.message ?? error), 'Pronouns');
                 return '';

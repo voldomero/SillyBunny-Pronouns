@@ -191,10 +191,13 @@ function buildEditor(entity) {
     controls.className = 'sbp-controls flex-container flexWrap';
 
     const addBtn = document.createElement('div');
-    addBtn.className = 'menu_button menu_button_icon';
-    addBtn.innerHTML = '<i class="fa-solid fa-plus"></i>';
+    addBtn.className = 'menu_button sbp-add';
     addBtn.title = t`Add an empty pronoun set`;
-    addBtn.append(document.createTextNode(' ' + t`Add set`));
+    const addIcon = document.createElement('i');
+    addIcon.className = 'fa-solid fa-plus';
+    const addText = document.createElement('span');
+    addText.textContent = t`Add set`;
+    addBtn.append(addIcon, addText);
     addBtn.addEventListener('click', () => addSetRow(entity));
     controls.appendChild(addBtn);
 
@@ -348,6 +351,9 @@ function onDirectiveCharacterInput(e) {
     saveSetting(settingKeys.DIRECTIVE_TEMPLATE_CHARACTER, String($(e.currentTarget).val() ?? ''));
     refreshDirectives();
 }
+function onDebugLoggingToggle(e) {
+    saveSetting(settingKeys.DEBUG_LOGGING, $(e.currentTarget).is(':checked'));
+}
 
 // ---------------------------------------------------------------------------
 // Injection
@@ -364,6 +370,23 @@ async function injectEditors() {
     }
 }
 
+/** Pushes stored settings values into the settings panel inputs. */
+function syncSettingsInputs() {
+    if (!document.getElementById('sbp_settings')) return;
+    // Diagnostic: surfaces the *stored* value, so a persistence bug (false after a reload
+    // where it was on) is distinguishable from a display bug.
+    console.debug(`[${EXTENSION_NAME}] settings sync — directiveEnabled =`, pronounsSettings.directiveEnabled);
+    $('#sbp_enable_shorthands').prop('checked', pronounsSettings.shorthands);
+    $('#sbp_enable_wyvern_compat').prop('checked', pronounsSettings.wyvernCompat);
+    $('#sbp_enable_janitor_compat').prop('checked', pronounsSettings.janitorCompat);
+    $('#sbp_directive_enabled').prop('checked', pronounsSettings.directiveEnabled);
+    $('#sbp_directive_depth').val(pronounsSettings.directiveDepth);
+    $('#sbp_directive_role').val(String(pronounsSettings.directiveRole));
+    $('#sbp_directive_persona').val(pronounsSettings.directiveTemplatePersona);
+    $('#sbp_directive_character').val(pronounsSettings.directiveTemplateCharacter);
+    $('#sbp_debug_logging').prop('checked', pronounsSettings.debugLogging);
+}
+
 async function injectSettings() {
     if (document.getElementById('sbp_settings')) return;
     const col2 = document.getElementById('extensions_settings2');
@@ -376,15 +399,20 @@ async function injectSettings() {
     template.innerHTML = html;
     parent.appendChild(template.content);
 
-    $('#sbp_enable_shorthands').prop('checked', pronounsSettings.shorthands).on('change', onShorthandsToggle);
-    $('#sbp_enable_wyvern_compat').prop('checked', pronounsSettings.wyvernCompat).on('change', onWyvernToggle);
-    $('#sbp_enable_janitor_compat').prop('checked', pronounsSettings.janitorCompat).on('change', onJanitorToggle);
+    $('#sbp_enable_shorthands').on('change', onShorthandsToggle);
+    $('#sbp_enable_wyvern_compat').on('change', onWyvernToggle);
+    $('#sbp_enable_janitor_compat').on('change', onJanitorToggle);
+    $('#sbp_directive_enabled').on('change', onDirectiveEnabledToggle);
+    $('#sbp_directive_depth').on('input', onDirectiveDepthChange);
+    $('#sbp_directive_role').on('change', onDirectiveRoleChange);
+    $('#sbp_directive_persona').on('input', onDirectivePersonaInput);
+    $('#sbp_directive_character').on('input', onDirectiveCharacterInput);
+    $('#sbp_debug_logging').on('change', onDebugLoggingToggle);
 
-    $('#sbp_directive_enabled').prop('checked', pronounsSettings.directiveEnabled).on('change', onDirectiveEnabledToggle);
-    $('#sbp_directive_depth').val(pronounsSettings.directiveDepth).on('input', onDirectiveDepthChange);
-    $('#sbp_directive_role').val(String(pronounsSettings.directiveRole)).on('change', onDirectiveRoleChange);
-    $('#sbp_directive_persona').val(pronounsSettings.directiveTemplatePersona).on('input', onDirectivePersonaInput);
-    $('#sbp_directive_character').val(pronounsSettings.directiveTemplateCharacter).on('input', onDirectiveCharacterInput);
+    // Sync every input from stored settings now, and again whenever the drawer is opened —
+    // guards against any later re-render resetting a checkbox to its HTML default.
+    syncSettingsInputs();
+    $('#sbp_settings .inline-drawer-toggle').on('click', () => setTimeout(syncSettingsInputs, 0));
 
     $('#sbp_directive_reset').on('click', () => {
         saveSetting(settingKeys.DIRECTIVE_TEMPLATE_PERSONA, DEFAULT_DIRECTIVE_PERSONA);
