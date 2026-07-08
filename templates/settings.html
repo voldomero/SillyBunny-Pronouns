@@ -29,7 +29,7 @@
                 </div>
 
                 <label for="sbp_directive_persona" data-i18n="Persona directive template">Persona directive template</label>
-                <small data-i18n="Use %LIST% for the formatted pronoun sets. {{user}} / {{char}} are resolved normally.">Use <code>%LIST%</code> for the formatted pronoun sets. <code>{{user}}</code> / <code>{{char}}</code> are resolved normally.</small>
+                <small data-i18n="Placeholders: %LIST% = all sets (she/her and they/them); %ACTIVE% = this turn's rotated set (varies each reply). User/char macros are resolved normally.">Placeholders: <code>%LIST%</code> = all sets (she/her and they/them); <code>%ACTIVE%</code> = this turn's rotated set (varies each reply). <code>&lbrace;&lbrace;user&rbrace;&rbrace;</code> / <code>&lbrace;&lbrace;char&rbrace;&rbrace;</code> are resolved normally.</small>
                 <textarea id="sbp_directive_persona" class="text_pole textarea_compact" rows="3"></textarea>
 
                 <label for="sbp_directive_character" data-i18n="Character directive template">Character directive template</label>
@@ -44,7 +44,7 @@
                 <h4 data-i18n="Macro aliases">Macro aliases</h4>
                 <label class="checkbox_label" for="sbp_enable_shorthands">
                     <input type="checkbox" id="sbp_enable_shorthands" />
-                    <span title="Enables English shorthand macros like {{she}}, {{him}}, {{their_}} for the persona."
+                    <span title="Enables English shorthand macros like &lbrace;&lbrace;she&rbrace;&rbrace;, &lbrace;&lbrace;him&rbrace;&rbrace;, &lbrace;&lbrace;their_&rbrace;&rbrace; for the persona."
                         data-i18n="Enable shorthand macros (persona)">Enable shorthand macros (persona)</span>
                 </label>
 
@@ -53,13 +53,21 @@
                 </small>
                 <label class="checkbox_label" for="sbp_enable_wyvern_compat">
                     <input type="checkbox" id="sbp_enable_wyvern_compat" />
-                    <span title="Enables WyvernChat capitalized macros: {{pronounSubjectiveCap}}, etc."
+                    <span title="Enables WyvernChat capitalized macros: &lbrace;&lbrace;pronounSubjectiveCap&rbrace;&rbrace;, etc."
                         data-i18n="WyvernChat: capitalized variants">WyvernChat: capitalized variants</span>
                 </label>
                 <label class="checkbox_label" for="sbp_enable_janitor_compat">
                     <input type="checkbox" id="sbp_enable_janitor_compat" />
-                    <span title="Enables JanitorAI-compatible macros: {{sub}}, {{obj}}, {{poss}}, {{poss_p}}, {{ref}}."
+                    <span title="Enables JanitorAI-compatible macros: &lbrace;&lbrace;sub&rbrace;&rbrace;, &lbrace;&lbrace;obj&rbrace;&rbrace;, &lbrace;&lbrace;poss&rbrace;&rbrace;, &lbrace;&lbrace;poss_p&rbrace;&rbrace;, &lbrace;&lbrace;ref&rbrace;&rbrace;."
                         data-i18n="JanitorAI: compatibility macros">JanitorAI: compatibility macros</span>
+                </label>
+
+                <hr style="width: 100%; margin: 10px 0;" />
+
+                <label class="checkbox_label" for="sbp_debug_logging">
+                    <input type="checkbox" id="sbp_debug_logging" />
+                    <span title="Logs the injected pronoun directive to the browser console on every generation. Use /pronouns-debug for a one-time dump."
+                        data-i18n="Log directive to console (debug)">Log directive to console (debug)</span>
                 </label>
             </div>
         </div>
