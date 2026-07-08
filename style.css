@@ -58,10 +58,27 @@
     cursor: pointer;
 }
 
-.sbp-controls {
+/* Self-contained flex so spacing never depends on ST's utility classes / menu_button margins. */
+.sbp-controls,
+.sbp-multi {
+    display: flex;
     flex-wrap: wrap;
-    gap: 4px;
+    gap: 6px;
     align-items: center;
+}
+
+.sbp-controls .menu_button,
+.sbp-multi .menu_button {
+    margin: 0;
+}
+
+.sbp-add {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 78px;
+    padding: 3px 8px;
+    white-space: nowrap;
 }
 
 .sbp-preset {

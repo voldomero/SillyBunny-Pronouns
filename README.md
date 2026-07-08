@@ -60,16 +60,31 @@ When an entity has 2+ sets, the **When multiple** selector controls how the macr
 
 ### The directive
 
-When an entity has 2+ sets, a system note like this is injected:
+This is the lever that makes NPCs actually refer to you with varied pronouns.
+When an entity has 2+ sets, a system instruction is injected and **refreshed before
+every generation**, rotating a concrete "active" set each turn:
 
-> *[System note: {{user}} uses multiple sets of pronouns — she/her and they/them.
-> When referring to {{user}}, alternate naturally between these sets throughout the
-> conversation instead of defaulting to only one. Every listed set is equally correct.]*
+> *[Pronoun instruction: {{user}} uses multiple pronoun sets — she/her and they/them.
+> In your next reply, refer to {{user}} using **they/them** pronouns specifically.
+> Across the roleplay, deliberately rotate through all of {{user}}'s pronoun sets
+> instead of defaulting to one — every set is equally correct and in-character.]*
 
-This is the lever that makes NPCs actually refer to you with varied pronouns. It's
-toggleable globally (Extensions → Pronouns (Multiple) settings), per-entity (the
-**Directive** selector: Default / Always on / Off), and the wording, injection depth,
-and role are all configurable.
+The per-turn command (`%ACTIVE%`) is deliberately forceful: a soft "alternate naturally"
+note gets ignored when the description and history are saturated with one pronoun, so
+instead each reply is told exactly which set to use, and the choice rotates turn to turn.
+
+Template placeholders: `%LIST%` = all sets ("she/her and they/them"); `%ACTIVE%` = this
+turn's rotated set ("they/them"). It's toggleable globally (Extensions → Pronouns
+(Multiple) settings), per-entity (the **Directive** selector: Default / Always on / Off),
+and the wording, injection depth (default 2), and role are all configurable.
+
+### Troubleshooting
+
+If the model still won't vary pronouns, run **`/pronouns-debug`** (or enable
+*Log directive to console* in settings). It reports, per entity: how many sets are
+stored, whether the directive will inject, and the exact text being sent. If it shows
+`0 set(s)` or `inject=false`, the data/toggle didn't take; if it shows the text but the
+model ignores it, lower the injection depth toward 0–1.
 
 ## Macros
 
@@ -103,6 +118,7 @@ through the entity's mode (rotate/primary/join).
 | `/pronouns-clear [target=…]` | Remove all sets. |
 | `/pronouns-replace [target=…] [shorthands=…] <text>` | Replace pronoun words in text with macros. |
 | `/pronouns-open-replacer [target=…] [shorthands=…] [text]` | Open the replacer popup. |
+| `/pronouns-debug` | Dump current sets, modes, and the injected directive text to the console. |
 
 ## Data & storage
 

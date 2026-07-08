@@ -11,8 +11,8 @@ import { injectUI, registerEventListeners, refreshEditors } from './src/ui.js';
 import { ensureSettings, cleanAllPronounData } from './src/pronouns.js';
 import { applyMacroSettings, registerPreProcessors } from './src/macros.js';
 import { registerSlashCommands } from './src/slash-commands.js';
-import { refreshDirectives, clearDirectives } from './src/directive.js';
-import { event_types, eventSource } from '../../../../script.js';
+import { refreshDirectives, clearDirectives, onGenerationDirective } from './src/directive.js';
+import { event_types, eventSource, saveSettingsDebounced } from '../../../../script.js';
 
 export const EXTENSION_KEY = 'sillybunny-pronouns';
 export const EXTENSION_NAME = 'SillyBunny-Pronouns';
@@ -41,6 +41,9 @@ export async function init() {
     console.debug(`[${EXTENSION_NAME}] Initializing...`);
 
     ensureSettings(getOwnVersion());
+    // Persist defaults on first run so settings (e.g. the directive toggle) survive a reload
+    // even if the user never changes anything.
+    saveSettingsDebounced();
 
     registerPreProcessors();
     applyMacroSettings();
@@ -51,7 +54,9 @@ export async function init() {
 
     registerSlashCommands();
 
-    // Inject directives for the current persona/character once the app is ready.
+    // Refresh the directive right before each prompt is assembled (advances per-turn rotation).
+    eventSource.on(event_types.GENERATION_AFTER_COMMANDS, onGenerationDirective);
+    // Also inject once now and once the app is ready, so it's present for the first generation.
     eventSource.on(event_types.APP_INITIALIZED, () => refreshDirectives());
     refreshDirectives();
 
