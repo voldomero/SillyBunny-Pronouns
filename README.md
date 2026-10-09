@@ -1,4 +1,9 @@
-# SillyBunny Pronouns — Multiple Pronouns [Extension]
+# SillyBunny Pronouns — Multiple Pronouns
+
+### This project has been updated and moved to a new repository!
+> **Depreciated**. See [Character Lexicon](https://github.com/voldomero/SillyBunny-CharacterLexicon) for latest release.
+
+---
 
 Pronoun management for **SillyBunny** personas *and* characters, built to make
 **multiple pronouns** actually work in chat.
